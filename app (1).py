@@ -14,7 +14,7 @@ st.set_page_config(layout="wide")
 @st.cache_data
 def load_monthly_data():
     try:
-        df = pd.read_csv('https://github.com/harshala2429/RoadAccidentsDashboardNew/blob/main/only_road_accidents_data_month2.csv')
+        df = pd.read_csv('https://raw.githubusercontent.com/harshala2429/RoadAccidentsDashboardNew/refs/heads/main/only_road_accidents_data_month2.csv')
         # Melt the DataFrame to transform the monthly columns into rows
         melted_df = df.melt(
             id_vars=['STATE/UT', 'YEAR', 'TOTAL'],
