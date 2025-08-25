@@ -1,1 +1,104 @@
-{"nbformat":4,"nbformat_minor":0,"metadata":{"colab":{"provenance":[],"authorship_tag":"ABX9TyPQaB4nnDhGIqNz2gSneD1U"},"kernelspec":{"name":"python3","display_name":"Python 3"},"language_info":{"name":"python"}},"cells":[{"cell_type":"code","source":["# app.py for Streamlit\n","\n","import streamlit as st\n","import pandas as pd\n","import plotly.express as px\n","\n","# Set the page configuration for a wider layout\n","st.set_page_config(layout=\"wide\")\n","\n","# --- 1. Data Loading and Preparation ---\n","\n","# Load the monthly accidents data\n","# Streamlit's caching decorator speeds up the app by not reloading data on every interaction.\n","@st.cache_data\n","def load_monthly_data():\n","    try:\n","        df = pd.read_csv('only_road_accidents_data_month2.csv')\n","        # Melt the DataFrame to transform the monthly columns into rows\n","        melted_df = df.melt(\n","            id_vars=['STATE/UT', 'YEAR', 'TOTAL'],\n","            var_name='Month',\n","            value_name='Accidents',\n","            value_vars=[col for col in df.columns if col not in ['STATE/UT', 'YEAR', 'TOTAL']]\n","        )\n","        # Define a categorical type for months to ensure they are sorted correctly\n","        month_order = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']\n","        melted_df['Month'] = pd.Categorical(melted_df['Month'], categories=month_order, ordered=True)\n","        return melted_df\n","    except FileNotFoundError:\n","        st.error(\"Error: 'only_road_accidents_data_month2.csv' not found. Please ensure the file is in the same directory.\")\n","        return pd.DataFrame()\n","\n","# Load the time-of-day accidents data\n","@st.cache_data\n","def load_time_data():\n","    try:\n","        df = pd.read_csv('only_road_accidents_data3.csv')\n","        # Melt the DataFrame to transform the time-of-day columns into rows.\n","        melted_df = df.melt(\n","            id_vars=['STATE/UT', 'YEAR', 'Total'],\n","            var_name='Time of Day',\n","            value_name='Accidents',\n","            value_vars=[col for col in df.columns if col not in ['STATE/UT', 'YEAR', 'Total']]\n","        )\n","        # Ensure the time periods are in a logical order\n","        time_of_day_order = ['0-3 hrs. (Night)', '3-6 hrs. (Night)', '6-9 hrs (Day)', '9-12 hrs (Day)', '12-15 hrs (Day)', '15-18 hrs (Day)', '18-21 hrs (Night)', '21-24 hrs (Night)']\n","        melted_df['Time of Day'] = pd.Categorical(melted_df['Time of Day'], categories=time_of_day_order, ordered=True)\n","        return melted_df\n","    except FileNotFoundError:\n","        st.error(\"Error: 'only_road_accidents_data3.csv' not found. Please ensure the file is in the same directory.\")\n","        return pd.DataFrame()\n","\n","# Load the dataframes\n","melted_monthly = load_monthly_data()\n","melted_time = load_time_data()\n","\n","# Check if data loaded correctly before proceeding\n","if melted_monthly.empty or melted_time.empty:\n","    st.stop()\n","\n","# --- 2. Streamlit UI and Logic ---\n","\n","st.title(\"Road Accidents Dashboard\")\n","st.markdown(\"Analyze road accident data by state, year, and time using interactive charts.\")\n","\n","# Create columns for the dropdowns\n","col1, col2 = st.columns(2)\n","\n","with col1:\n","    states = sorted(melted_monthly['STATE/UT'].unique())\n","    selected_state = st.selectbox(\"Select State/UT:\", states, index=0)\n","\n","with col2:\n","    years = sorted(melted_monthly['YEAR'].unique())\n","    selected_year = st.selectbox(\"Select Year:\", years, index=0)\n","\n","# Filter the data based on user selections\n","filtered_df_monthly = melted_monthly[(melted_monthly['STATE/UT'] == selected_state) & (melted_monthly['YEAR'] == selected_year)]\n","filtered_df_time = melted_time[(melted_time['STATE/UT'] == selected_state) & (melted_time['YEAR'] == selected_year)]\n","\n","# Create and display the monthly accidents chart\n","st.header(f\"Monthly Accidents in {selected_state} ({selected_year})\")\n","monthly_fig = px.bar(\n","    filtered_df_monthly,\n","    x='Month',\n","    y='Accidents',\n","    labels={'Accidents': 'Number of Accidents'},\n","    color='Accidents',\n","    color_continuous_scale=px.colors.sequential.RdYlGn_r\n",")\n","st.plotly_chart(monthly_fig, use_container_width=True)\n","\n","# Create and display the time-of-day chart\n","st.header(f\"Accidents by Time of Day in {selected_state} ({selected_year})\")\n","time_fig = px.line(\n","    filtered_df_time,\n","    x='Time of Day',\n","    y='Accidents',\n","    labels={'Accidents': 'Number of Accidents', 'Time of Day': 'Time Period'},\n","    markers=True,\n","    line_shape='linear',\n","    color_discrete_sequence=['#3498db']\n",")\n","st.plotly_chart(time_fig, use_container_width=True)\n"],"metadata":{"id":"4cO4EZimFHxu"},"execution_count":null,"outputs":[]}]}
+# app.py for Streamlit
+
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+# Set the page configuration for a wider layout
+st.set_page_config(layout="wide")
+
+# --- 1. Data Loading and Preparation ---
+
+# Load the monthly accidents data
+# Streamlit's caching decorator speeds up the app by not reloading data on every interaction.
+@st.cache_data
+def load_monthly_data():
+    try:
+        df = pd.read_csv('only_road_accidents_data_month2.csv')
+        # Melt the DataFrame to transform the monthly columns into rows
+        melted_df = df.melt(
+            id_vars=['STATE/UT', 'YEAR', 'TOTAL'],
+            var_name='Month',
+            value_name='Accidents',
+            value_vars=[col for col in df.columns if col not in ['STATE/UT', 'YEAR', 'TOTAL']]
+        )
+        # Define a categorical type for months to ensure they are sorted correctly
+        month_order = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER']
+        melted_df['Month'] = pd.Categorical(melted_df['Month'], categories=month_order, ordered=True)
+        return melted_df
+    except FileNotFoundError:
+        st.error("Error: 'only_road_accidents_data_month2.csv' not found. Please ensure the file is in the same directory.")
+        return pd.DataFrame()
+
+# Load the time-of-day accidents data
+@st.cache_data
+def load_time_data():
+    try:
+        df = pd.read_csv('only_road_accidents_data3.csv')
+        # Melt the DataFrame to transform the time-of-day columns into rows.
+        melted_df = df.melt(
+            id_vars=['STATE/UT', 'YEAR', 'Total'],
+            var_name='Time of Day',
+            value_name='Accidents',
+            value_vars=[col for col in df.columns if col not in ['STATE/UT', 'YEAR', 'Total']]
+        )
+        # Ensure the time periods are in a logical order
+        time_of_day_order = ['0-3 hrs. (Night)', '3-6 hrs. (Night)', '6-9 hrs (Day)', '9-12 hrs (Day)', '12-15 hrs (Day)', '15-18 hrs (Day)', '18-21 hrs (Night)', '21-24 hrs (Night)']
+        melted_df['Time of Day'] = pd.Categorical(melted_df['Time of Day'], categories=time_of_day_order, ordered=True)
+        return melted_df
+    except FileNotFoundError:
+        st.error("Error: 'only_road_accidents_data3.csv' not found. Please ensure the file is in the same directory.")
+        return pd.DataFrame()
+
+# Load the dataframes
+melted_monthly = load_monthly_data()
+melted_time = load_time_data()
+
+# Check if data loaded correctly before proceeding
+if melted_monthly.empty or melted_time.empty:
+    st.stop()
+
+# --- 2. Streamlit UI and Logic ---
+
+st.title("Road Accidents Dashboard")
+st.markdown("Analyze road accident data by state, year, and time using interactive charts.")
+
+# Create columns for the dropdowns
+col1, col2 = st.columns(2)
+
+with col1:
+    states = sorted(melted_monthly['STATE/UT'].unique())
+    selected_state = st.selectbox("Select State/UT:", states, index=0)
+
+with col2:
+    years = sorted(melted_monthly['YEAR'].unique())
+    selected_year = st.selectbox("Select Year:", years, index=0)
+
+# Filter the data based on user selections
+filtered_df_monthly = melted_monthly[(melted_monthly['STATE/UT'] == selected_state) & (melted_monthly['YEAR'] == selected_year)]
+filtered_df_time = melted_time[(melted_time['STATE/UT'] == selected_state) & (melted_time['YEAR'] == selected_year)]
+
+# Create and display the monthly accidents chart
+st.header(f"Monthly Accidents in {selected_state} ({selected_year})")
+monthly_fig = px.bar(
+    filtered_df_monthly,
+    x='Month',
+    y='Accidents',
+    labels={'Accidents': 'Number of Accidents'},
+    color='Accidents',
+    color_continuous_scale=px.colors.sequential.RdYlGn_r
+)
+st.plotly_chart(monthly_fig, use_container_width=True)
+
+# Create and display the time-of-day chart
+st.header(f"Accidents by Time of Day in {selected_state} ({selected_year})")
+time_fig = px.line(
+    filtered_df_time,
+    x='Time of Day',
+    y='Accidents',
+    labels={'Accidents': 'Number of Accidents', 'Time of Day': 'Time Period'},
+    markers=True,
+    line_shape='linear',
+    color_discrete_sequence=['#3498db']
+)
+st.plotly_chart(time_fig, use_container_width=True)
