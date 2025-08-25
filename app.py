@@ -86,7 +86,7 @@ monthly_fig = px.bar(
     y='Accidents',
     labels={'Accidents': 'Number of Accidents'},
     color='Accidents',
-    color_continuous_scale=px.colors.sequential.RdYlGn_r
+    color_continuous_scale=px.colors.sequential.RdYlGn
 )
 st.plotly_chart(monthly_fig, use_container_width=True)
 
